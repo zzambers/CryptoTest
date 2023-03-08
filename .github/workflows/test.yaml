@@ -38,6 +38,68 @@ jobs:
       - name: Run
         run: make SKIP_AGENT_TESTS=1 all
 
+  test-fedora-fips:
+    name: "Fedora FIPS"
+    runs-on: "ubuntu-latest"
+#    container:
+#      image: fedora:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        jdkconf:
+          - JDK 8
+          - JDK 11
+          - JDK 17
+        include:
+          - jdkconf: JDK 8
+            jdkpkg: "java-1.8.0-openjdk"
+          - jdkconf: JDK 11
+            jdkpkg: "java-11-openjdk"
+          - jdkconf: JDK 17
+            jdkpkg: "java-17-openjdk"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        run: |
+          ls /proc/sys
+          sudo apt-get install bindfs
+          mkdir -p sys/crypto
+          echo 1 > sys/crypto/fips_enabled
+          sudo chown -R root:root sys
+          sudo chmod -R a-w sys
+          sudo mount --bind -o nonempty sys /proc/sys
+          #sudo bindfs -o nonempty sys /proc/sys
+          # sudo dnf -y install bindfs
+          # sudo dnf -y install ${{ matrix.jdkpkg }}-devel make bindfs
+          cat /proc/sys/crypto/fips_enabled
+# https://tbrindus.ca/correct-ld-preload-hooking-libc/
+# https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#runsargs
+      - name: Prepare image
+        if: false
+        run: >
+          printf '%s\n%s\n'
+          'FROM fedora:latest'
+          'VOLUME ["/proc/sys"]'
+          | docker build -t 'fedora-fips:latest' -
+      - name: run
+        run: |
+          docker run --entrypoint "/bin/cat" --rm fedora:latest /proc/sys/crypto/fips_enabled
+            
+            
+      - name: Container run
+        uses: docker://fedora:latest
+        if: false
+        with:
+          entrypoint: /bin/cat
+          args: /proc/sys/crypto/fips_enabled 
+      - name: Run
+        if: false
+        run: |
+          cat /proc/sys/crypto/fips_enabled
+          sudo update-crypto-policies --set FIPS
+          export JAVA_HOME=/usr/lib/jvm/${{ matrix.jdkpkg }}
+          make SKIP_AGENT_TESTS=1 all
+
   test-win:
     name: "Windows"
     runs-on: "windows-latest"
