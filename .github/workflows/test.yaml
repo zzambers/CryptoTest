@@ -34,7 +34,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
+          distribution: 'adopt-openj9'
           java-version: ${{ matrix.jdkver || env.jdk_latest }}
       - name: Build
         run: make classes
@@ -64,7 +64,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
+          distribution: 'adopt-openj9'
           java-version: ${{ matrix.jdkver || env.jdk_latest }}
       - uses: msys2/setup-msys2@v2
         with:
@@ -101,7 +101,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
+          distribution: 'adopt-openj9'
           java-version: ${{ matrix.jdkver || env.jdk_latest }}
       - name: Run
         run: SKIP_AGENT_TESTS=1 ./run.sh "${JAVA_HOME}"
